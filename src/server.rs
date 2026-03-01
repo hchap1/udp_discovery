@@ -10,9 +10,9 @@ use async_channel::Receiver;
 use async_channel::unbounded;
 
 fn package(identifier: &'static str, payload: [u8; 4]) -> Vec<u8> {
-    let mut bytes = vec![];
-    bytes.append(&mut identifier.as_bytes().to_vec());
-    bytes.append(&mut payload.to_vec());
+    let mut bytes = vec![0u8; identifier.len() + 4];
+    identifier.as_bytes().iter().enumerate().for_each(|(idx, byte)| bytes[idx] = *byte);
+    payload.into_iter().enumerate().for_each(|(idx, byte)| bytes[idx + identifier.len()] = byte);
     bytes
 }
 
@@ -54,7 +54,7 @@ impl Server {
         let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port)).await.map_err(|_| Error::BindFailed)?;
         socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
         
-        let bytes = package(identifier, ip_addr.octets());
+        let mut bytes = package(identifier, ip_addr.octets());
         let mut buf = vec![0u8; identifier.len()];
 
         while let Err(e) = killswitch.try_recv() {
@@ -64,7 +64,8 @@ impl Server {
             // If the parsed string matches the identifer, echo back the server address
             if String::from_utf8_lossy(&buf).to_string().as_str() == identifier {
                 println!("Identifier matched. Responding with {bytes:?}");
-                socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
+                let bytes = socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
+                println!("Sent {bytes}");
             } else {
                 println!("Identifier failed.");
             }
