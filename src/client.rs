@@ -1,7 +1,5 @@
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
-
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use tokio::net::UdpSocket;
-
 use crate::error::Error;
 
 pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Error> {
@@ -13,7 +11,9 @@ pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Err
     let mut recv_buffer = vec![0u8; identifier.len() + 4];
     let bytes_received = socket.recv(&mut recv_buffer).await.map_err(|_| Error::RecvFailed)?;
 
-    if bytes_received != buffer.len() {
+    println!("Bytes received: {bytes_received}");
+
+    if bytes_received != recv_buffer.len() {
         return Err(Error::InvalidIdentifier);
     }
 
