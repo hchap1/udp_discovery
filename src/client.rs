@@ -24,6 +24,6 @@ pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Err
         return Err(Error::InvalidIdentifier);
     }
 
-    let segments = &recv_buffer[identifier.len() + 1..];
+    let segments = &recv_buffer[identifier.len()..];
     Ok(IpAddr::V4(Ipv4Addr::from_octets(segments.try_into().map_err(|_| Error::InvalidIdentifier)?)))
 }
