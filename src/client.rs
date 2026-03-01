@@ -5,7 +5,7 @@ use tokio::net::UdpSocket;
 use crate::error::Error;
 
 pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Error> {
-    let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255)), port)).await.map_err(|_| Error::BindFailed)?;
+    let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255)), port)).await.map_err(|e| {println!("ERROR: {e:?}"); Error::BindFailed})?;
     socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
 
     let buffer = identifier.as_bytes().to_vec();
