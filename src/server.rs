@@ -10,11 +10,9 @@ use async_channel::Receiver;
 use async_channel::unbounded;
 
 fn package(identifier: &'static str, payload: [u8; 4]) -> Vec<u8> {
-    let mut bytes = identifier.as_bytes().to_vec();
-    for byte in payload {
-        bytes.push(byte);
-    }
-
+    let mut bytes = vec![];
+    bytes.append(&mut identifier.as_bytes().to_vec());
+    bytes.append(&mut payload.to_vec());
     bytes
 }
 
@@ -57,6 +55,7 @@ impl Server {
         socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
         
         let bytes = package(identifier, ip_addr.octets());
+        println!("Bytes: {bytes:?}");
         let mut buf = vec![0u8; identifier.len()];
 
         while let Err(e) = killswitch.try_recv() {
