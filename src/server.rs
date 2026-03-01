@@ -63,7 +63,10 @@ impl Server {
 
             // If the parsed string matches the identifer, echo back the server address
             if String::from_utf8_lossy(&buf).to_string().as_str() == identifier {
+                println!("Identifier matched. Responding with {bytes:?}");
                 socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
+            } else {
+                println!("Identifier failed.");
             }
         }
 

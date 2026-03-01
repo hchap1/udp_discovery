@@ -9,7 +9,7 @@ pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Err
     let buffer = identifier.as_bytes().to_vec();
     socket.send_to(&buffer, SocketAddr::new(IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255)), port)).await.map_err(|_| Error::BroadcastFailed)?;
     let mut recv_buffer = vec![0u8; identifier.len() + 4];
-    let bytes_received = socket.recv(&mut recv_buffer).await.map_err(|_| Error::RecvFailed)?;
+    let (bytes_received, _) = socket.recv_from(&mut recv_buffer).await.map_err(|_| Error::RecvFailed)?;
 
     println!("Bytes received: {bytes_received}/{}", recv_buffer.len());
     println!("Buffer: {recv_buffer:?}");
