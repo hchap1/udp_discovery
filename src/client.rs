@@ -12,6 +12,7 @@ pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Err
     let bytes_received = socket.recv(&mut recv_buffer).await.map_err(|_| Error::RecvFailed)?;
 
     println!("Bytes received: {bytes_received}/{}", recv_buffer.len());
+    println!("Buffer: {recv_buffer:?}");
 
     if bytes_received != recv_buffer.len() {
         return Err(Error::InvalidIdentifier);
