@@ -5,10 +5,6 @@ use tokio::net::UdpSocket;
 use tokio::task::JoinHandle;
 use crate::error::Error;
 
-use async_channel::Sender;
-use async_channel::Receiver;
-use async_channel::unbounded;
-
 fn package(identifier: &'static str, payload: [u8; 4]) -> Vec<u8> {
     let mut bytes = vec![0u8; identifier.len() + 4];
     identifier.as_bytes().iter().enumerate().for_each(|(idx, byte)| bytes[idx] = *byte);
@@ -16,23 +12,16 @@ fn package(identifier: &'static str, payload: [u8; 4]) -> Vec<u8> {
     bytes
 }
 
-pub enum ThreadMessage {
-    Kill
-}
-
 pub struct Server {
-    killswitch: Sender<ThreadMessage>,
     thread: JoinHandle<Result<(), Error>>
 }
 
 impl Server {
 
     pub async fn spawn(identifier: &'static str, port: u16) -> Self {
-        let (killswitch_sender, killswitch_receiver) = unbounded();
-        let thread = tokio::spawn(Self::run(identifier, killswitch_receiver, port));
+        let thread = tokio::spawn(Self::run(identifier, port));
 
         Self {
-            killswitch: killswitch_sender,
             thread
         }
     }
@@ -49,34 +38,27 @@ impl Server {
     }
 
     /// Bind a UDP socket to all interfaces to transmit IP address
-    pub async fn run(identifier: &'static str, killswitch: Receiver<ThreadMessage>, port: u16) -> Result<(), Error> {
+    pub async fn run(identifier: &'static str, port: u16) -> Result<(), Error> {
         let ip_addr = Self::find_suitable_ipv4().await?;
         let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port)).await.map_err(|_| Error::BindFailed)?;
         socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
         
-        let mut bytes = package(identifier, ip_addr.octets());
+        let bytes = package(identifier, ip_addr.octets());
         let mut buf = vec![0u8; identifier.len()];
 
-        while let Err(e) = killswitch.try_recv() {
-            if e == TryRecvError::Closed { break; }
+        loop {
             let (_, addr) = socket.recv_from(&mut buf).await.map_err(|_| Error::RecvFailed)?;
 
             // If the parsed string matches the identifer, echo back the server address
             if String::from_utf8_lossy(&buf).to_string().as_str() == identifier {
-                println!("Identifier matched. Responding with {bytes:?}");
-                let bytes = socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
-                println!("Sent {bytes}");
-            } else {
-                println!("Identifier failed.");
+                socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
             }
         }
-
-        Ok(())
     }
 
     /// Stop UDP broadcasts
     pub fn stop(&self) {
-        let _ = self.killswitch.send_blocking(ThreadMessage::Kill);
+        self.thread.abort();
     }
 
     pub async fn wait(self) {
