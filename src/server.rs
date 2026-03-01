@@ -76,4 +76,8 @@ impl Server {
     pub fn stop(&self) {
         let _ = self.killswitch.send_blocking(ThreadMessage::Kill);
     }
+
+    pub async fn wait(self) {
+        let _ = self.thread.await;
+    }
 }
