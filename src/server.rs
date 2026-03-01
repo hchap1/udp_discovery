@@ -55,7 +55,6 @@ impl Server {
         socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
         
         let bytes = package(identifier, ip_addr.octets());
-        println!("Bytes: {bytes:?}");
         let mut buf = vec![0u8; identifier.len()];
 
         while let Err(e) = killswitch.try_recv() {
