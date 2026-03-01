@@ -62,7 +62,7 @@ impl Server {
             let (_, addr) = socket.recv_from(&mut buf).await.map_err(|_| Error::RecvFailed)?;
 
             // If the parsed string matches the identifer, echo back the server address
-            if String::from_utf8_lossy(&bytes).to_string().as_str() == identifier {
+            if String::from_utf8_lossy(&buf).to_string().as_str() == identifier {
                 socket.send_to(&bytes, addr).await.map_err(|_| Error::BroadcastFailed)?;
             }
         }
