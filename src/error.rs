@@ -1,5 +1,9 @@
 #[derive(Debug, Clone)]
 pub enum Error {
     NoEndpoint,
-    BindFailed
+    BindFailed,
+    BroadcastFailed,
+    HandleDropped,
+    RecvFailed,
+    InvalidIdentifier
 }
