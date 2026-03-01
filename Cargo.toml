@@ -1,7 +1,10 @@
 [package]
 name = "udp_discovery"
 version = "0.1.0"
+authors = ["Harrison Chapman <hchap1@hotmail.com>"]
 edition = "2024"
+license = "MIT"
+description = "Simple crate allowing a server to respond to UDB broadcasts on LAN with an exposed IpV4 interface for sockets."
 
 [dependencies]
 if-addrs = "0.15.0"
