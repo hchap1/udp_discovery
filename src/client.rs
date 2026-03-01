@@ -1,15 +1,15 @@
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use tokio::net::UdpSocket;
 
 use crate::error::Error;
 
 pub async fn discover(identifier: &'static str, port: u16) -> Result<IpAddr, Error> {
-    let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255)), port)).await.map_err(|e| {println!("ERROR: {e:?}"); Error::BindFailed})?;
+    let socket = UdpSocket::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port)).await.map_err(|e| {println!("ERROR: {e:?}"); Error::BindFailed})?;
     socket.set_broadcast(true).map_err(|_| Error::BroadcastFailed)?;
 
     let buffer = identifier.as_bytes().to_vec();
-    socket.send(&buffer).await.map_err(|_| Error::BroadcastFailed)?;
+    socket.send_to(&buffer, SocketAddr::new(IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255)), port)).await.map_err(|_| Error::BroadcastFailed)?;
     let mut recv_buffer = vec![0u8; identifier.len() + 4];
     let bytes_received = socket.recv(&mut recv_buffer).await.map_err(|_| Error::RecvFailed)?;
 
