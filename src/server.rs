@@ -11,6 +11,7 @@ fn package(identifier: &'static str, payload: [u8; 4]) -> Vec<u8> {
     bytes
 }
 
+#[derive(Debug)]
 pub struct Server {
     thread: JoinHandle<Result<(), Error>>
 }
