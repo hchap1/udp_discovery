@@ -5,5 +5,6 @@ pub enum Error {
     BroadcastFailed,
     HandleDropped,
     RecvFailed,
-    InvalidIdentifier
+    InvalidIdentifier,
+    CouldNotFindServer
 }
